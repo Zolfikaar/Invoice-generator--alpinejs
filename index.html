@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <!-- Boxicons -->
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <title>Document</title>
+  <!-- Custom Style -->
+  <style>
+    [x-cloak] {
+      display: none;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', 'sans-serif';
+    }
+
+    body {
+      background-color: #EBEEF1;
+    }
+
+    #logo-btn {
+      width: 200px;
+      height: 130px;
+
+    }
+
+    .add-interchangable {
+      cursor: pointer;
+    }
+
+    .remove-interchangable-item i {
+      position: absolute;
+      right: -32px;
+      top: 5px;
+    }
+  </style>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script >
+    function handler() {
+      return {
+        subtotal: 0,
+				grandTotal: 0,
+        discount: 0,
+        tax:0,
+        shipping:0,
+        items: [],
+        addItemField() {
+            this.items.push({
+                desc: '',
+                qty: 1,
+                rate:0,
+                total: this.qty * this.rate
+             });
+             calculateGrandTotal()
+          },
+          removeItemField(index) {
+             this.items.splice(index, 1);
+           },
+           calculateGrandTotal(){
+            this.grandTotal = this.subtotal + this.discount + this.tax + this.shipping
+           }
+        }
+        
+    }
+  </script>
+</head>
+
+<body>
+
+  <div class="container">
+    <form class="row my-5" x-data="{
+      open_discount: false,
+      toggleDiscount() { this.open_discount = ! this.open_discount },
+      open_tax: false,
+      toggleTax() { this.open_tax = ! this.open_tax },
+      open_shipping: false,
+      toggleShipping() { this.open_shipping = ! this.open_shipping },
+      currency: 'USD',
+      items: [],
+      }" x-cloak>
+      <!-- Main Controllers -->
+      <div class="col-md-10 ">
+        <div class="p-4 row bg-white border border-dark border-1 d-flex justify-content-between">
+
+          <div class="col-md-6">
+            <div class="input-group mb-3 ">
+              <label
+                class="input-group-text btn btn-light btn-lg border border-dark border-1 d-flex justify-content-center"
+                for="inputGroupFile01" id="logo-btn"><i class='bx bx-plus'></i>Add Your Logo</label>
+              <input type="file" class="form-control" id="inputGroupFile01" hidden>
+            </div>
+
+            <div class="input-group mb-3">
+              <textarea class="notes form-control" placeholder="Who is this invoice from? (required)"
+                aria-describedby="basic-addon2" required style=" resize: none;" spellcheck="false"></textarea>
+            </div>
+
+            <div class="row">
+
+              <div class="col-md-6">
+                <label for="inputEmail4" class="form-label">Bill To</label>
+                <textarea class="notes form-control" placeholder="Who is this invoice to? (required)" required
+                  style=" resize: none;" spellcheck="false"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label for="inputPassword4" class="form-label">Ship To</label>
+                <textarea class="notes form-control" id="inputPassword4" placeholder="(Optional)" style=" resize: none;"
+                  spellcheck="false"></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="col-md-5">
+            <h1>INVOICE</h1>
+            <div class="input-group mb-3">
+              <span class="input-group-text" id="basic-addon1">#</span>
+              <input type="number" class="form-control" placeholder="Invoice Number" readonly value="1">
+            </div>
+            <div class="row mb-3">
+              <label for="date" class="col-sm-5 col-form-label">Date</label>
+              <div class="col-sm-7">
+                <input type="date" class="form-control" id="date">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <label for="paymentTerm" class="col-sm-5 col-form-label">Payment Terms</label>
+              <div class="col-sm-7">
+                <input type="text" class="form-control" id="paymentTerm">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <label for="dueDate" class="col-sm-5 col-form-label">Due Date</label>
+              <div class="col-sm-7">
+                <input type="date" class="form-control" id="dueDate">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <label for="poNumber" class="col-sm-5 col-form-label">PO Number</label>
+              <div class="col-sm-7">
+                <input type="number" class="form-control" id="poNumber">
+              </div>
+            </div>
+          </div>
+
+          <!-- Invoice Items -->
+          <div class="invoice-items w-100 my-3" x-data="handler()">
+            <div class="table-header bg-dark text-white">
+              <div class="row">
+                <div class="col-md-7 px-3">Item</div>
+                <div class="col-md-1 px-3">Quantity</div>
+                <div class="col-md-1 px-4">Rate</div>
+                <div class="col-md-1 px-5">Amount</div>
+              </div>
+            </div>
+            <div class="table-body tableElement" >
+              <template x-for="(item, index) in items" :key="index">
+                
+              <div class="row my-1" style="margin-left: unset !important;" >
+                <input type="text" class="col-md-7 m-1 item-desc" x-model="item.desc" placeholder="Description of service or product...">
+                <input type="text" class="col-md-1 m-1 item-qty"  x-model="item.qty" min="1" required>
+                <input type="text" class="col-md-1 m-1 item-rate" x-model="item.rate">
+                <div class="col-md-1 m-1" aria-disabled="true"><span class="currency" x-text="currency"></span><span
+                  class=" item-amount mx-3" x-text="item.qty * item.rate"></span></div>
+              </div>
+              </template>
+                
+            <!-- <div class="table-body" x-data="{items:[desc:'',amount:0,rate:0,]}">
+              <template x-for="item in items">
+
+                <div class="row my-1" style="margin-left: unset !important;" >
+                  <input type="text" class="col-md-7 m-1 item-desc" placeholder="Description of service or product..." x-bind.value="item.desc">
+                  <input type="text" class="col-md-1 m-1 item-qty" x-bind.value="item.amount" min="1" x-model="item.amount" required>
+                  <input type="text" class="col-md-1 m-1 item-rate" x-bind.value="item.rate" x-model="item.rate">
+                  <div class="col-md-1 m-1" aria-disabled="true"><span class="currency" x-text="currency"></span><span
+                    class=" item-amount mx-3" x-text="item.amount * item.rate"></span></div>
+                </div>
+
+              </template>
+            </div>-->
+
+            </div> 
+
+            <button class="btn btn-success text-white" @click="addItemField()"><i class='bx bx-plus'></i>Add Item</button>
+          </div>
+
+
+          <!-- Subtotal & Notes -->
+          <div class="subtotal-box my-3">
+            <div class="row d-flex justify-content-between">
+              <div class="col-md-6">
+                <div class="mb-2">
+                  <label for="notes">Notes</label>
+                  <textarea class="notes form-control"
+                    placeholder="Notes - any relevant information not already covered" style=" resize: none;"
+                    spellcheck="false"></textarea>
+                </div>
+
+                <div class="mb-2">
+                  <label for="notes">Terms</label>
+                  <textarea class="notes form-control"
+                    placeholder="Terms and conditions - late fees, payment methods, delivery schedule"
+                    style=" resize: none;" spellcheck="false"></textarea>
+                </div>
+              </div>
+              <div class="col-md-3" >
+                <div class="row mb-3">
+                  <span class="col-md-5">Subtotal</span>
+                  <span class="col-md-7 text-end"><span class="currency mx-2" x-text="currency"></span>0.000</span>
+                </div>
+
+
+                <!-- Interchangable -->
+                <div class="interchangable position-relative">
+                  <div class="row mb-3" x-show="open_discount">
+                    <span class="col-md-5">Discount</span>
+                    <input type="number" class="col-md-7 text-end" x-model="this.discount">
+                    <span class="remove-interchangable-item text-danger" @click="toggleDiscount"><i
+                        class='bx bx-x'></i></span>
+                  </div>
+                </div>
+                <div class="interchangable position-relative">
+                  <div class="row mb-3" x-show="open_tax">
+                    <span class="col-md-5">Tax</span>
+                    <input type="number" class="col-md-7 text-end" x-model="this.tax">
+                    <span class="remove-interchangable-item text-danger" @click="toggleTax"><i
+                        class='bx bx-x'></i></span>
+                  </div>
+                </div>
+                <div class="interchangable position-relative">
+                  <div class="row mb-3" x-show="open_shipping">
+                    <span class="col-md-5">Shipping</span>
+                    <input type="number" class="col-md-7 text-end" x-model="this.shipping">
+                    <span class="remove-interchangable-item text-danger" @click="toggleShipping"><i
+                        class='bx bx-x'></i></span>
+                  </div>
+                </div>
+                <!-- Interchangable -->
+
+                <!-- Add  Interchangable-->
+                <div class="mb-3 ">
+                  <span class="text-success add-interchangable" @click="toggleDiscount" x-show="!open_discount"><i
+                      class='bx bx-plus'></i>
+                    Discount</span>
+                  <span class="text-success add-interchangable mx-2" @click="toggleTax" x-show="!open_tax"><i
+                      class='bx bx-plus'></i> Tax</span>
+                  <span class="text-success add-interchangable" @click="toggleShipping" x-show="!open_shipping"><i
+                      class='bx bx-plus'></i> Shipping</span>
+                </div>
+
+                <!-- Total -->
+                <div class="row mb-3">
+                  <span class="col-md-5">Total</span>
+                  <span class="col-md-7 text-end"><span class="currency mx-2" x-text="currency"></span><span x-text="grandTotal"></span></span>
+                </div>
+
+                <div class="row mb-3">
+                  <span class="col-md-5">Amount Paid</span>
+                  <input type="number" class="col-md-7 text-end" value="0">
+                </div>
+
+                <div class="row mb-3">
+                  <span class="col-md-5">Balance Due</span>
+                  <span class="col-md-7 text-end"><span class="currency mx-2" x-text="currency"></span>0.000</span>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right Controllers -->
+      <div class="col-md-2 px-4">
+        <div class="d-flex flex-column justify-content-center">
+
+          <div class="control-item mb-4 text-center">
+            <button type="button" class="btn btn-success btn-lg ">Send Invoice</button>
+          </div>
+
+          <div class="control-item mb-4">
+            <span class="text-center"><i class='bx bxs-download'></i>Download Invoice</span>
+          </div>
+
+          <div class="control-item mb-4">
+            <label for="inputState" class="form-label">CURRENCY</label>
+            <select id="inputState" class="form-select" x-model="currency">
+              <template x-for="currency in ['USD','IQD','EGP']">
+                <option x-text="currency"></option>
+              </template>
+            </select>
+          </div>
+
+
+          <div class="control-item mb-4">
+            <label for="inputState" class="form-label">TYPE</label>
+            <select id="inputState" class="form-select">
+              <option value="1">Invoice</option>
+              <option value="2">Create Note</option>
+              <option value="3">Quote</option>
+              <option value="4">Purchase Order</option>
+              <option value="5">Recipt</option>
+            </select>
+          </div>
+
+
+          <div class="control-item mb-4">
+            <span class="text-success">Save Default</span>
+          </div>
+
+
+          <hr class="dropdown-divider mb-4">
+
+
+          <div class="control-item ">
+            <button class="btn btn-outline-success">History</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
